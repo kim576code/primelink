@@ -1,133 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090811">
+<title>PRIMELINK</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#090811;color:white;font-family:Arial,sans-serif;min-height:100vh;padding:20px}
+.container{max-width:480px;margin:25px auto}
+header{text-align:center;margin-bottom:28px}
+.logo{color:#ff3d9a;font-size:34px;font-weight:bold;letter-spacing:2px}
+.subtitle{color:#aaa;margin-top:8px}
+.panel{background:#171522;border:1px solid #302b40;border-radius:14px;padding:22px;margin-bottom:20px}
+h2{color:#ff4caa;margin-bottom:18px}
+label{display:block;margin:14px 0 7px;color:#ddd;font-size:14px}
+input,select{display:block;width:100%;padding:13px;border:1px solid #393449;border-radius:8px;background:#0d0b16;color:white;font-size:15px}
+input:focus,select:focus{outline:2px solid #ff3d9a}
+button{width:100%;padding:14px;margin-top:20px;background:#f52f91;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6}
+button:hover{background:#d9237c}
+.small{color:#aaa;font-size:12px;line-height:1.6;margin-top:14px}
+.hidden{display:none!important}
+.balance{background:#24152e;padding:20px;border-radius:10px;margin-bottom:20px}
+.balance strong{display:block;font-size:30px;color:#ff4caa;margin-top:10px}
+.message{margin-top:15px;padding:12px;border-radius:8px;background:#29243a;color:white;line-height:1.5;overflow-wrap:anywhere}
+footer{text-align:center;color:#777;font-size:12px;margin:25px 0}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div class="logo">PRIMELINK</div>
+<p class="subtitle">Connect • Grow • Earn</p>
+</header>
 
-    <title>PRIMELINK</title>
+<section class="panel" id="registration">
+<h2>New Member Registration</h2>
+<form id="registerForm">
+<label for="username">Username</label>
+<input id="username" type="text" required placeholder="Enter your username">
+<label for="phone">Phone number</label>
+<input id="phone" type="tel" required placeholder="e.g. 07XXXXXXXX">
+<label for="mpesa">M-Pesa phone number</label>
+<input id="mpesa" type="tel" required placeholder="Enter M-Pesa number">
+<label for="country">Country</label>
+<select id="country" required>
+<option value="">Select country</option>
+<option value="Kenya">Kenya</option>
+<option value="Uganda">Uganda</option>
+<option value="Tanzania">Tanzania</option>
+<option value="Other">Other</option>
+</select>
+<label for="password">Password</label>
+<input id="password" type="password" required minlength="6" placeholder="Create password">
+<label for="confirmPassword">Confirm password</label>
+<input id="confirmPassword" type="password" required minlength="6" placeholder="Confirm password">
+<label for="invitedBy">Invited by (optional)</label>
+<input id="invitedBy" type="text" placeholder="Referral username">
+<button type="submit">Create Account</button>
+</form>
+<p class="small">Demonstration registration only. Account details are not yet stored on a secure server.</p>
+<div id="registerMessage" class="message hidden"></div>
+</section>
 
-    <style>
+<section class="panel hidden" id="dashboard">
+<h2>Member Dashboard</h2>
+<div class="balance">
+<p>Wallet Balance</p>
+<strong>KSh 0.00</strong>
+<p class="small">Verified balance will appear here.</p>
+</div>
+<h2>Make a Deposit</h2>
+<p>Deposit amount: <strong>KSh 300</strong></p>
+<label for="depositPhone">M-Pesa phone number</label>
+<input id="depositPhone" type="tel" placeholder="e.g. 07XXXXXXXX">
+<button id="depositButton" type="button">Deposit KSh 300</button>
+<div id="depositMessage" class="message hidden"></div>
+<p class="small">M-Pesa payments are not activated yet. Never enter your M-Pesa PIN on this website.</p>
+<button type="button" id="logoutButton">Return to Registration</button>
+</section>
+<footer>PRIMELINK © 2026. All rights reserved.</footer>
+</div>
 
-        * {
-            box-sizing: border-box;
-        }
+<script>
+const registration=document.getElementById("registration");
+const dashboard=document.getElementById("dashboard");
 
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 30px 15px;
-            background: #070611;
-            color: white;
-        }
+document.getElementById("registerForm").addEventListener("submit",function(event){
+ event.preventDefault();
+ const password=document.getElementById("password").value;
+ const confirmPassword=document.getElementById("confirmPassword").value;
+ const message=document.getElementById("registerMessage");
+ if(password!==confirmPassword){
+  message.textContent="Passwords do not match.";
+  message.classList.remove("hidden");
+  return;
+ }
+ const username=document.getElementById("username").value;
+ message.textContent="Welcome, "+username+"! This is a demonstration account. Secure registration is not activated yet.";
+ message.classList.remove("hidden");
+ document.getElementById("depositPhone").value=document.getElementById("mpesa").value;
+ registration.classList.add("hidden");
+ dashboard.classList.remove("hidden");
+ document.getElementById("password").value="";
+ document.getElementById("confirmPassword").value="";
+});
 
-        .container {
-            max-width: 500px;
-            margin: auto;
-        }
+document.getElementById("depositButton").addEventListener("click",async function(){
+ const phone=document.getElementById("depositPhone").value.trim();
+ const message=document.getElementById("depositMessage");
+ const button=document.getElementById("depositButton");
+ message.classList.remove("hidden");
+ if(!phone){message.textContent="Please enter your M-Pesa phone number.";return;}
+ button.disabled=true;
+ message.textContent="Contacting payment server...";
+ try{
+  const response=await fetch("/api/deposit",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({amount:300,phone:phone})
+  });
+  const result=await response.json();
+  message.textContent=result.message||"Payment request could not be completed.";
+ }catch(error){
+  message.textContent="Unable to contact the server. Please try again later.";
+ }
+ button.disabled=false;
+});
 
-        .logo {
-            text-align: center;
-            color: #ff238b;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #aaaaaa;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: #0e0b1a;
-            padding: 25px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 30px rgba(255, 0, 150, 0.2);
-        }
-
-        h2 {
-            text-align: center;
-            color: #ff4b52;
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            text-align: left;
-            margin-bottom: 7px;
-            font-weight: bold;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 18px;
-            background: #171522;
-            color: white;
-            border: 1px solid #302c3d;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: #ff238b;
-        }
-
-        button {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(
-                90deg,
-                #ff4b45,
-                #ec00b8
-            );
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        #message,
-        #depositMessage {
-            text-align: center;
-            color: #ff238b;
-            margin-top: 15px;
-        }
-
-        #dashboard {
-            display: none;
-        }
-
-        .balance {
-            text-align: center;
-            padding: 25px;
-            background: #171522;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-
-        .balance p {
-            color: #aaaaaa;
-            margin: 0 0 8px;
-        }
-
-        .balance h1 {
-            margin: 0;
-            color: white;
-        }
-
-        .deposit-title {
-            color: #
-        
+document.getElementById("logoutButton").addEventListener("click",function(){
+ dashboard.classList.add("hidden");
+ registration.classList.remove("hidden");
+});
+</script>
+</body>
+</html>
